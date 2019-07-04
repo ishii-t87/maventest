@@ -32,8 +32,9 @@ build
 bin
 
 .metadata/
-.metadata/
+
 # Other
 *.log
 *.swp
 *.bak
+/.recommenders/
