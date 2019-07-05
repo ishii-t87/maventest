@@ -15,6 +15,7 @@ public class GreeterTest {
 
 	@Test
 	public void greeterSaysHello() {
+		// sayHelloメソッドに"Hello"という文字列が含まれているかのテスト
 		assertThat(mGreeter.sayHello(), containsString("Hello"));
 	}
 }
