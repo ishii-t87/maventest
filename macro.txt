@@ -1,0 +1,155 @@
+Option Explicit
+
+Sub tennki()
+
+    Dim hiduke As String
+    hiduke = Range("AD2").Value
+    
+    Dim searchPath As String, targetPathes() As String
+    searchPath = Range("AG2").Value
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    targetPathes = GetTargetFolders(fso, searchPath, hiduke)
+
+    Dim targetPathSize As Integer, i As Integer, targetBooks() As String
+    targetPathSize = UBound(targetPathes)
+    For i = 0 To targetPathSize - 1
+    
+        Dim size As Integer
+        If Not Not targetBooks Then
+            size = UBound(targetBooks)
+        End If
+        
+        Dim retBooks() As String, retSize As Integer, j As Integer
+        retBooks = GetBooks(fso, targetPathes(i))
+        If Not Not retBooks Then
+            retSize = UBound(retBooks)
+            ReDim Preserve targetBooks(size + retSize)
+            For j = 1 To retSize
+                targetBooks(size + j - 1) = retBooks(j - 1)
+            Next
+        End If
+    Next
+    
+    For i = 0 To UBound(targetBooks) - 1
+        Call writeToBook(targetBooks(i))
+    Next
+
+End Sub
+
+Function GetTargetFolders(fso As Object, searchPath As String, hiduke As String) As String()
+
+    Dim targetPathes() As String
+    Dim folder As Variant
+    
+    For Each folder In fso.GetFolder(searchPath).SubFolders
+    
+        Dim i As Integer
+        If Not Not targetPathes Then
+            i = UBound(targetPathes)
+        End If
+            
+        If folder.Name Like hiduke & "*" Then
+            ReDim Preserve targetPathes(i + 1)
+            targetPathes(i) = folder.path
+        Else
+            Dim retPathes() As String, retPathSize As Integer, j As Integer
+            retPathes = GetTargetFolders(fso, folder.path, hiduke)
+            retPathSize = UBound(retPathes)
+            ReDim Preserve targetPathes(i + retPathSize)
+            
+            For j = 1 To retPathSize
+                targetPathes(i + j - 1) = retPathes(j - 1)
+            Next
+        End If
+        
+    Next folder
+    
+    GetTargetFolders = targetPathes
+End Function
+
+Function GetBooks(fso As Object, searchPath As String) As String()
+
+    Dim books() As String, buf As String, i As Integer, folder As Variant
+    
+    buf = Dir(searchPath & "\*" & ".xlsx")
+    Do While Len(buf) > 0
+        If Not Not books Then
+            i = UBound(books)
+        End If
+        ReDim Preserve books(i + 1)
+        books(i) = searchPath & "\" & buf
+        buf = Dir()
+    Loop
+    
+    For Each folder In fso.GetFolder(searchPath).SubFolders
+    
+        Dim retBooks() As String, retSize As Integer, j As Integer
+        retBooks = GetBooks(fso, folder.path)
+        retSize = UBound(retBooks)
+        ReDim Preserve books(i + retSize)
+            
+        For j = 1 To retSize
+            books(i + j - 1) = retBooks(j)
+        Next
+        
+    Next folder
+    GetBooks = books
+    
+End Function
+
+Function writeToBook(inputFileFullPath As String)
+
+    Workbooks.Open (inputFileFullPath)
+    Dim inputFile As String, inputBook As Workbook, inputSheet As Worksheet
+    inputFile = Dir(inputFileFullPath)
+    Set inputBook = Workbooks(inputFile)
+    Set inputSheet = inputBook.Worksheets("入力シート")
+    
+    Dim outputSheet As Worksheet, outputStartRow As Integer
+    Set outputSheet = ThisWorkbook.Worksheets("入力用")
+    If outputSheet.Cells(2, 1) = "" Then
+        outputStartRow = 2
+    Else
+        outputStartRow = outputSheet.Cells(1, 1).End(xlDown).Row + 1
+    End If
+    
+    Dim i As Integer
+    i = 5
+    While (inputSheet.Cells(i, 1) <> "")
+        
+        inputSheet.Cells(i, 2).Copy outputSheet.Cells(outputStartRow, 5)
+        Dim place As String
+        place = inputSheet.Cells(i, 4).Value & inputSheet.Cells(i, 5).Value & " " & inputSheet.Cells(i, 6).Value
+        outputSheet.Cells(outputStartRow, 11).Value = place
+        inputSheet.Cells(i, 8).Copy outputSheet.Cells(outputStartRow, 6)
+        inputSheet.Cells(i, 9).Copy outputSheet.Cells(outputStartRow, 10)
+        inputSheet.Cells(i, 10).Copy outputSheet.Cells(outputStartRow, 12)
+        inputSheet.Cells(i, 11).Copy outputSheet.Cells(outputStartRow, 13)
+        inputSheet.Cells(i, 12).Copy outputSheet.Cells(outputStartRow, 14)
+        inputSheet.Cells(i, 13).Copy outputSheet.Cells(outputStartRow, 15)
+        inputSheet.Cells(i, 14).Copy outputSheet.Cells(outputStartRow, 9)
+        inputSheet.Cells(i, 15).Copy outputSheet.Cells(outputStartRow, 23)
+        inputSheet.Cells(i, 16).Copy outputSheet.Cells(outputStartRow, 24)
+        inputSheet.Cells(i, 18).Copy outputSheet.Cells(outputStartRow, 16)
+        inputSheet.Cells(i, 19).Copy outputSheet.Cells(outputStartRow, 17)
+        inputSheet.Cells(i, 20).Copy outputSheet.Cells(outputStartRow, 18)
+        inputSheet.Cells(i, 21).Copy outputSheet.Cells(outputStartRow, 19)
+        inputSheet.Cells(i, 22).Copy outputSheet.Cells(outputStartRow, 20)
+        inputSheet.Cells(i, 23).Copy outputSheet.Cells(outputStartRow, 25)
+        inputSheet.Cells(i, 24).Copy outputSheet.Cells(outputStartRow, 26)
+        inputSheet.Cells(i, 25).Copy outputSheet.Cells(outputStartRow, 27)
+        inputSheet.Cells(i, 26).Copy outputSheet.Cells(outputStartRow, 28)
+        inputSheet.Cells(i, 27).Copy outputSheet.Cells(outputStartRow, 22)
+        outputSheet.Cells(outputStartRow, 4).Value = "武田史子"
+        outputSheet.Cells(outputStartRow, 2).Value = Date
+        
+        i = i + 1
+        outputStartRow = outputStartRow + 1
+    Wend
+    
+    Application.DisplayAlerts = False
+    Workbooks(inputFile).Close
+    Application.DisplayAlerts = True
+    
+End Function
